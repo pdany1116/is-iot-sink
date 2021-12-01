@@ -1,4 +1,5 @@
 import pathlib
+import os
 from enum import Enum
 from datetime import datetime
 
@@ -19,6 +20,7 @@ class Logger:
         if pathlib.Path(__file__).parent.parent.joinpath("logs").exists() == False:
             pathlib.Path(__file__).parent.parent.joinpath("logs").mkdir()
         self.__filepath = pathlib.Path(__file__).parent.parent.joinpath("logs").joinpath("log")
+        os.remove(self.__filepath)
 
     def info(self, message: str):
         self.__log(LogLevel.INFO, message)
@@ -34,7 +36,7 @@ class Logger:
         if self.__printConsole:
             print(to_write)
         file = open(self.__filepath, "a")
-        file.write(to_write)
+        file.write(to_write + "\n")
         file.close()
         
     def __get_time_now(self):

@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <setup>
+    <name>Sink</name>
     <location>
         <!-- Sibiu, Romania-->
         <latitude>41.8</latitude>
         <longitude>24.15</longitude>
     </location>
+    <mqtt>
+        <host>192.168.0.10</host>
+        <topics></topics>
+        <registrationTopic>/registration/</registrationTopic>
+    </mqtt>
 </setup>
