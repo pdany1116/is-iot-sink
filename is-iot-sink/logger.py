@@ -20,7 +20,10 @@ class Logger:
         if pathlib.Path(__file__).parent.parent.joinpath("logs").exists() == False:
             pathlib.Path(__file__).parent.parent.joinpath("logs").mkdir()
         self.__filepath = pathlib.Path(__file__).parent.parent.joinpath("logs").joinpath("log")
-        os.remove(self.__filepath)
+        try:
+            os.remove(self.__filepath)
+        except:
+            pass
 
     def info(self, message: str):
         self.__log(LogLevel.INFO, message)

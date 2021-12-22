@@ -8,8 +8,9 @@ class MQTTSubscriber:
         self.__host = utils.getSetting("host")
         self.__name = utils.getSetting("name")
         self.__queue_head = queue_head
-        self.__topics = self.__parse_topics()
         self.__registrationTopic = utils.getSetting("registrationTopic")
+        self.__collectedDataTopic = utils.getSetting("collectedDataTopic")
+        self.__valveTopic = utils.getSetting("valveTopic")
         self.__client = mqtt.Client(self.__name)
         self.__client.on_connect = self.__on_connect
         self.__client.on_disconnect = self.__on_disconnect
@@ -20,10 +21,9 @@ class MQTTSubscriber:
             self.__client.connect(self.__host)
             
             self.__client.subscribe(self.__registrationTopic)
+            self.__client.subscribe(self.__collectedDataTopic)
+            self.__client.subscribe(self.__valveTopic + "#")
             
-            for topic in self.__topics:
-                self.__client.subscribe(topic)
-
             self.__client.loop_start()
         except Exception as ex:
             LOG.err("MQTT Client failed to start!")
@@ -50,9 +50,3 @@ class MQTTSubscriber:
     def __on_message(self, client, userdata, message):
         self.__queue_head.put(message)
  
-    def __parse_topics(self):
-        topics_str = str(utils.getSetting('topics'))
-        if topics_str == "":
-            return []
-        else:
-            return topics_str.split(",")
