@@ -20,14 +20,13 @@ def process_data():
         # For now just log the incoming messages
         msg = str(message.payload.decode("utf-8"))
         LOG.info("<{}> [{}]".format(message.topic, msg))
-        if (message.topic == utils.getSetting("registrationTopic")):
+        if (message.topic == utils.get_setting("mqtt/topics/registration")):
             __sub.subscribe(msg)
             LOG.info("Succesfully subscribed to [{}]".format(msg))
-        elif (message.topic.startswith(utils.getSetting("collectedDataTopic"))):
-            # TODO: upload in database
+        elif (message.topic.startswith(utils.get_setting("mqtt/topics/collectedData"))):
             pass
-        elif (message.topic.startswith(utils.getSetting("valveTopic"))):
-            valve_str = message.topic.replace(utils.getSetting("valveTopic"), "")
+        elif (message.topic.startswith(utils.get_setting("mqtt/topics/valves"))):
+            valve_str = message.topic.replace(utils.get_setting("mqtt/topics/valves"), "")
             try:
                 valve = int(valve_str)
             except:
@@ -49,7 +48,7 @@ def signal_handler(sig, frame):
 
 def main():
     signal.signal(signal.SIGINT, signal_handler)
-    w = weather.Weather(utils.getSetting('latitude'), utils.getSetting('longitude'))
+    w = weather.Weather(utils.get_setting('location/latitude'), utils.get_setting('location/longitude'))
     t = threading.Thread(target=process_data)
     t.setDaemon(True)
     t.start()

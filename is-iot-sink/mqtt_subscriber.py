@@ -5,12 +5,12 @@ from logger import LOG
 
 class MQTTSubscriber:
     def __init__(self, queue_head : queue.Queue):
-        self.__host = utils.getSetting("host")
-        self.__name = utils.getSetting("name")
+        self.__host = utils.get_setting("mqtt/host")
+        self.__name = utils.get_setting("name")
         self.__queue_head = queue_head
-        self.__registrationTopic = utils.getSetting("registrationTopic")
-        self.__collectedDataTopic = utils.getSetting("collectedDataTopic")
-        self.__valveTopic = utils.getSetting("valveTopic")
+        self.__registrationTopic = utils.get_setting("mqtt/topics/registration")
+        self.__collectedDataTopic = utils.get_setting("mqtt/topics/collectedData")
+        self.__valvesTopic = utils.get_setting("mqtt/topics/valves")
         self.__client = mqtt.Client(self.__name)
         self.__client.on_connect = self.__on_connect
         self.__client.on_disconnect = self.__on_disconnect
@@ -22,7 +22,7 @@ class MQTTSubscriber:
             
             self.__client.subscribe(self.__registrationTopic)
             self.__client.subscribe(self.__collectedDataTopic)
-            self.__client.subscribe(self.__valveTopic + "#")
+            self.__client.subscribe(self.__valvesTopic + "#")
             
             self.__client.loop_start()
         except Exception as ex:

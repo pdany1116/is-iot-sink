@@ -9,13 +9,13 @@
     <mqtt>
         <host>192.168.0.10</host>
         <topics>
-            <registrationTopic>/registration/</registrationTopic>
-            <collectedDataTopic>/data/</collectedDataTopic>
-            <valveTopic>/valve/</valveTopic>
+            <registration>/registration/</registration>
+            <collectedData>/data/</collectedData>
+            <valves>/valves/</valves>
         </topics>
     </mqtt>
     <valves>
-        <valvesCount>6</valvesCount>
+        <count>6</count>
         <gpios>14,15,18,23,24,25</gpios>
     </valves>
 </setup>

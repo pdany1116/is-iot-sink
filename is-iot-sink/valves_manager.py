@@ -6,7 +6,7 @@ from logger import LOG
 
 class ValveManager:
     def __init__(self):
-        self.__valve_count = int(utils.getSetting('valvesCount'))
+        self.__valve_count = int(utils.get_setting('valves/count'))
         self.__gpios = self.__parse_gpios()
         GPIO.setmode(GPIO.BCM)
         for gpio in self.__gpios:
@@ -45,7 +45,7 @@ class ValveManager:
         GPIO.cleanup()
 
     def __parse_gpios(self):
-        gpios_str = str(utils.getSetting('gpios'))
+        gpios_str = str(utils.get_setting('valves/gpios'))
         if gpios_str == "":
             return []
         else:
