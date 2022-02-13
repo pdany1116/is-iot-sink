@@ -2,16 +2,17 @@ import utils
 import weather
 import mqtt_subscriber
 import valves_manager
+import mongodb_client
 from logger import LOG
 import queue
 import threading
 import signal
 import sys
 
-
 __queue_head = queue.Queue(maxsize=0)
 __sub = mqtt_subscriber.MQTTSubscriber(__queue_head)
 __vm = valves_manager.ValveManager()
+__mongo_client = mongodb_client.MongoClient()
 
 def process_data():
     while True:
@@ -24,6 +25,8 @@ def process_data():
             __sub.subscribe(msg)
             LOG.info("Succesfully subscribed to [{}]".format(msg))
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/collectedData"))):
+            # TODO: check if json format is valid
+            __mongo_client.insert_one(msg)
             pass
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/valves"))):
             valve_str = message.topic.replace(utils.get_setting("mqtt/topics/valves"), "")

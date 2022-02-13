@@ -18,4 +18,12 @@
         <count>6</count>
         <gpios>14,15,18,23,24,25</gpios>
     </valves>
+    <mongo>
+        <db>Thuia</db>
+        <collections>
+            <readings>readings</readings>
+            <valves>valves</valves>
+            <users>users</users>
+        </collections>
+    </mongo>
 </setup>
