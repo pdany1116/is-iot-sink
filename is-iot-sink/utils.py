@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+import json
 
 def get_setting(setting: str):
     file = open("./setup.xml")
@@ -18,3 +19,11 @@ def get_settings(settings: str):
     for setting in list(root.find(settings)):
         results.append(setting.text)
     return results
+
+def check_json_format(doc):
+    try:
+        doc = json.loads(doc)
+        return True
+    except:
+	    return False
+
