@@ -10,6 +10,7 @@ import threading
 import signal
 import sys
 import json
+import valve_log_json_builder
 
 __queue_head = queue.Queue(maxsize=0)
 __sub = mqtt_subscriber.MQTTSubscriber(__queue_head)
@@ -49,6 +50,11 @@ def process_data():
                 __vm.turn_off_valve_by_number(valve)
             else:
                 LOG.err("Invalid valve request! [{}]".format(msg))
+                continue
+
+            action = "TURN_{}".format(msg).upper()
+            jdata = valve_log_json_builder.ValveLogJsonBuilder(valve, action, None)
+            __mongo_client.insert_one(json.loads(jdata.dumps()), utils.get_setting("mongo/collections/valves"))
 
         else:
             LOG.err("Unwanted: <{}> [{}]".format(message.topic, msg))
