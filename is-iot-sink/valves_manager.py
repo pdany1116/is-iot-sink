@@ -1,8 +1,7 @@
+import json
 import RPi.GPIO as GPIO
-import time
 import utils
 from logger import LOG
-
 
 class ValveManager:
     def __init__(self):
@@ -40,6 +39,19 @@ class ValveManager:
     def get_valves_count(self):
         return self.__valve_count
 
+    def get_valves_status(self):
+        states = []
+        for gpio in self.__gpios:
+            state = {}
+            state['valveId'] = self.__gpios.index(gpio)
+            input = GPIO.input(gpio)
+            if input == 1:
+                state['state'] = "OFF"
+            else:
+                state['state'] = "ON"
+            states.append(state)
+        return json.dumps(states)
+        
     def terminate(self):
         LOG.info("Valves Manager terminate!")
         GPIO.cleanup()

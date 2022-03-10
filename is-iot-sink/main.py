@@ -1,6 +1,6 @@
 import utils
 import weather
-import mqtt_subscriber
+import mqtt_client
 import valves_manager
 import mongodb_client
 from logger import LOG
@@ -10,10 +10,10 @@ import threading
 import signal
 import sys
 import json
-import valve_log_json_builder
 
 __queue_head = queue.Queue(maxsize=0)
-__sub = mqtt_subscriber.MQTTSubscriber(__queue_head)
+__sub = mqtt_client.MQTTClient()
+__sub.attach_queue(__queue_head)
 __vm = valves_manager.ValveManager()
 __mongo_client = mongodb_client.MongoClient()
 
@@ -22,42 +22,44 @@ def process_data():
         message = __queue_head.get()
         __queue_head.task_done()
         # For now just log the incoming messages
-        msg = str(message.payload.decode("utf-8"))
-        LOG.info("<{}> [{}]".format(message.topic, msg))
+        payload = str(message.payload.decode("utf-8"))
+        LOG.info("<{}> [{}]".format(message.topic, payload))
 
         if (message.topic == utils.get_setting("mqtt/topics/registration")):
-            __sub.subscribe(msg)
-            LOG.info("Succesfully subscribed to [{}]".format(msg))
+            __sub.subscribe(payload)
+            LOG.info("Succesfully subscribed to [{}]".format(payload))
 
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/collectedData"))):
-            if(utils.check_json_format(msg) == False):
-                LOG.err("Invalid json format! [{}]".format(msg))
+            if(utils.check_json_format(payload) == False):
+                LOG.err("Invalid json format! [{}]".format(payload))
                 continue
             # TODO: check last readings before inserting data
-            __mongo_client.insert_one(json.loads(msg), utils.get_setting("mongo/collections/readings"))
+            __mongo_client.insert_one(json.loads(payload), utils.get_setting("mongo/collections/readings"))
 
-        elif (message.topic.startswith(utils.get_setting("mqtt/topics/valves"))):
-            valve_str = message.topic.replace(utils.get_setting("mqtt/topics/valves"), "")
+        elif (message.topic.startswith(utils.get_setting("mqtt/topics/valves/control"))):
             try:
-                valve = int(valve_str)
+                data = json.loads(payload)
+                valve = data['valveId']
+                action = data['action'].upper()
+                if (action == "TURN_ON"):
+                    __vm.turn_on_valve_by_number(valve)
+                elif (action == "TURN_OFF"):
+                    __vm.turn_off_valve_by_number(valve)
+                else:
+                    LOG.err("Invalid valve action request! [{}]".format(action))
+                    continue
             except:
-                LOG.err("Invalid valve number! [{}]".format(valve_str))
+                LOG.err("Invalid format for valve control request!")
                 continue
+            
+            # TODO: check user integrity
+            __mongo_client.insert_one(data, utils.get_setting("mongo/collections/valves"))
 
-            if (msg == "on"):
-                __vm.turn_on_valve_by_number(valve)
-            elif (msg == "off"):
-                __vm.turn_off_valve_by_number(valve)
-            else:
-                LOG.err("Invalid valve request! [{}]".format(msg))
-                continue
-
-            action = "TURN_{}".format(msg).upper()
-            jdata = valve_log_json_builder.ValveLogJsonBuilder(valve, action, None)
-            __mongo_client.insert_one(json.loads(jdata.dumps()), utils.get_setting("mongo/collections/valves"))
-
+        elif (message.topic.startswith(utils.get_setting("mqtt/topics/valves/request"))):
+            __sub.publish(utils.get_setting("mqtt/topics/valves/response"), __vm.get_valves_status())
+        
         else:
-            LOG.err("Unwanted: <{}> [{}]".format(message.topic, msg))
+            LOG.err("Unwanted: <{}> [{}]".format(message.topic, payload))
 
 def signal_handler(sig, frame):
     LOG.info("SIGINT received!")

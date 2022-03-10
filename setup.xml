@@ -7,11 +7,15 @@
         <longitude>24.15</longitude>
     </location>
     <mqtt>
-        <host>192.168.0.10</host>
+        <host>broker.emqx.io</host>
         <topics>
             <registration>/registration/</registration>
             <collectedData>/data/</collectedData>
-            <valves>/valves/</valves>
+            <valves>
+                <control>/valves/control/</control>
+                <request>/valves/status/request/</request>
+                <response>/valves/status/response/</response>
+            </valves>
         </topics>
     </mqtt>
     <valves>
