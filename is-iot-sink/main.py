@@ -36,9 +36,11 @@ def process_data():
             LOG.info("Succesfully subscribed to [{}]".format(payload))
 
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/collector/data"))):
-            # TODO: check last readings before inserting data
-            # TODO: check mandatory keys
-            __mongo_client.insert_one(payload, utils.get_setting("mongo/collections/readings"))
+            if payload["collectorId"] in __allowed_collectors:
+                # TODO: check last readings before inserting data
+                __mongo_client.insert_one(payload, utils.get_setting("mongo/collections/readings"))
+            else:
+                LOG.err("Unaccepted collector with id: {}".format(payload["collectorId"]))
 
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/valves/control"))):
             try:
