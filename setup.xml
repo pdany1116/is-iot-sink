@@ -9,8 +9,10 @@
     <mqtt>
         <host>broker.emqx.io</host>
         <topics>
-            <registration>/registration/</registration>
-            <collectedData>/data/</collectedData>
+            <collector>
+                <registration>/collector/registration/</registration>
+                <data>/collector/data/</data>
+            </collector>
             <valves>
                 <control>/valves/control/</control>
                 <request>/valves/status/request/</request>

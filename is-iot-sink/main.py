@@ -11,36 +11,39 @@ import signal
 import sys
 import json
 
-__queue_head = queue.Queue(maxsize=0)
+__queue_head = queue.Queue(maxsize = 0)
 __sub = mqtt_client.MQTTClient()
 __sub.attach_queue(__queue_head)
 __vm = valves_manager.ValveManager()
 __mongo_client = mongodb_client.MongoClient()
+__allowed_collectors = set()
 
 def process_data(): 
     while True:
         message = __queue_head.get()
         __queue_head.task_done()
-        # For now just log the incoming messages
-        payload = str(message.payload.decode("utf-8"))
-        LOG.info("<{}> [{}]".format(message.topic, payload))
 
-        if (message.topic == utils.get_setting("mqtt/topics/registration")):
-            __sub.subscribe(payload)
+        try:
+            payload = json.loads(str(message.payload.decode("utf-8")))
+        except:
+            LOG.err("Invalid json format! [{}]".format(message.payload))
+            continue
+
+        LOG.info("<{}> [{}]".format(message.topic, payload))
+        
+        if (message.topic == utils.get_setting("mqtt/topics/collector/registration")):
+            __allowed_collectors.add(payload["collectorId"])
             LOG.info("Succesfully subscribed to [{}]".format(payload))
 
-        elif (message.topic.startswith(utils.get_setting("mqtt/topics/collectedData"))):
-            if(utils.check_json_format(payload) == False):
-                LOG.err("Invalid json format! [{}]".format(payload))
-                continue
+        elif (message.topic.startswith(utils.get_setting("mqtt/topics/collector/data"))):
             # TODO: check last readings before inserting data
-            __mongo_client.insert_one(json.loads(payload), utils.get_setting("mongo/collections/readings"))
+            # TODO: check mandatory keys
+            __mongo_client.insert_one(payload, utils.get_setting("mongo/collections/readings"))
 
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/valves/control"))):
             try:
-                data = json.loads(payload)
-                valve = data['valveId']
-                action = data['action'].upper()
+                valve = payload['valveId']
+                action = payload['action'].upper()
                 if (action == "TURN_ON"):
                     __vm.turn_on_valve_by_number(valve)
                 elif (action == "TURN_OFF"):
@@ -53,13 +56,13 @@ def process_data():
                 continue
             
             # TODO: check user integrity
-            __mongo_client.insert_one(data, utils.get_setting("mongo/collections/valves"))
+            __mongo_client.insert_one(payload, utils.get_setting("mongo/collections/valves"))
 
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/valves/request"))):
             __sub.publish(utils.get_setting("mqtt/topics/valves/response"), __vm.get_valves_status())
         
         else:
-            LOG.err("Unwanted: <{}> [{}]".format(message.topic, payload))
+            LOG.err("Unwanted: <{}> [{}]".format(message.topic, message.payload))
 
 def signal_handler(sig, frame):
     LOG.info("SIGINT received!")

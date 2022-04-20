@@ -7,10 +7,10 @@ class MQTTClient:
     def __init__(self):
         self.__host = utils.get_setting("mqtt/host")
         self.__name = utils.get_setting("name")
-        self.__registrationTopic = utils.get_setting("mqtt/topics/registration")
-        self.__collectedDataTopic = utils.get_setting("mqtt/topics/collectedData")
+        self.__registrationTopic = utils.get_setting("mqtt/topics/collector/registration")
+        self.__dataTopic = utils.get_setting("mqtt/topics/collector/data")
         self.__valvesTopic = utils.get_setting("mqtt/topics/valves/control")
-        self.__valvesStatusRequest = utils.get_setting("mqtt/topics/valves/request")
+        self.__valvesStatusRequestTopic = utils.get_setting("mqtt/topics/valves/request")
         self.__client = mqtt.Client(self.__name)
         self.__client.on_connect = self.__on_connect
         self.__client.on_disconnect = self.__on_disconnect
@@ -20,12 +20,16 @@ class MQTTClient:
         try:
             self.__client.connect(self.__host)
             self.subscribe(self.__registrationTopic)
-            self.subscribe(self.__collectedDataTopic)
+            self.subscribe(self.__dataTopic)
             self.subscribe(self.__valvesTopic)
-            self.subscribe(self.__valvesStatusRequest)
+            self.subscribe(self.__valvesStatusRequestTopic)
             self.__client.loop_start()
         except Exception as ex:
             LOG.err("MQTT Client failed to start! : {}".format(ex))
+
+    def connect(self):
+        if not self.__client.is_connected():
+            self.__client.connect(self.__host)
 
     def disconnect(self):
         self.__client.disconnect()
@@ -38,7 +42,12 @@ class MQTTClient:
 
     def publish(self, topic: str, message: str):
         try:
-            #self.__client.connect(self.__host)
+            self.connect()
+        except Exception:
+            LOG.err("MQTT Client faild to connect!")
+            return
+
+        try:
             self.__client.publish(topic, message)
         except Exception as ex:
             LOG.err("MQTT Publisher Client failed to publish!")
