@@ -32,4 +32,8 @@
             <users>users</users>
         </collections>
     </mongo>
+    <collectors>
+        <!-- Time in seconds. 1h = 3600s -->
+        <expireTime>3600</expireTime>
+    </collectors>
 </setup>

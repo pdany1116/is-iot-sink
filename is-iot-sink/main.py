@@ -10,18 +10,21 @@ import threading
 import signal
 import sys
 import json
+import allowed_collectors
 
 __queue_head = queue.Queue(maxsize = 0)
 __sub = mqtt_client.MQTTClient()
 __sub.attach_queue(__queue_head)
 __vm = valves_manager.ValveManager()
 __mongo_client = mongodb_client.MongoClient()
-__allowed_collectors = set()
+__ac = allowed_collectors.AllowedCollectors()
 
 def process_data(): 
     while True:
         message = __queue_head.get()
         __queue_head.task_done()
+
+        __ac.check_all()
 
         try:
             payload = json.loads(str(message.payload.decode("utf-8")))
@@ -32,12 +35,13 @@ def process_data():
         LOG.info("<{}> [{}]".format(message.topic, payload))
         
         if (message.topic == utils.get_setting("mqtt/topics/collector/registration")):
-            __allowed_collectors.add(payload["collectorId"])
-            LOG.info("Succesfully subscribed to [{}]".format(payload))
+            __ac.add(payload["collectorId"])
+            LOG.info("Collector [{}] accepted.".format(payload["collectorId"]))
 
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/collector/data"))):
-            if payload["collectorId"] in __allowed_collectors:
+            if __ac.is_allowed(payload["collectorId"]):
                 # TODO: check last readings before inserting data
+                # TODO: validate fields 
                 __mongo_client.insert_one(payload, utils.get_setting("mongo/collections/readings"))
             else:
                 LOG.err("Unaccepted collector with id: {}".format(payload["collectorId"]))
