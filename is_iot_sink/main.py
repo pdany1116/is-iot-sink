@@ -29,9 +29,8 @@ def process_data():
         try:
             payload = json.loads(str(message.payload.decode("utf-8")))
         except:
-            payload = str(message.payload.decode("utf-8"))
-            #LOG.err("Invalid json format! [{}]".format(message.payload))
-            #continue
+            LOG.err("Invalid json format! [{}]".format(message.payload))
+            continue
 
         LOG.info("<{}> [{}]".format(message.topic, payload))
         
