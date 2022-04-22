@@ -5,8 +5,64 @@ from pprint import *
 
 class FLC:
     def __init__(self):
-        self.fs = FuzzySystem()
-        for variable in FUZZY_SETS:
+        self.fs1 = FuzzySystem()
+        self.fs2 = FuzzySystem()
+        self.fs3 = FuzzySystem()
+        self.__add_fs_variables(self.fs1, FLC1_SETS)
+        self.__add_fs_variables(self.fs2, FLC2_SETS)
+        self.__add_fs_variables(self.fs3, FLC3_SETS)
+        self.fs1.add_rules(FLC1_RULES)
+        self.fs2.add_rules(FLC2_RULES)
+        self.fs3.add_rules(FLC3_RULES)
+
+    def solve(self,
+            soil_moisture,
+            air_temperature,
+            air_humidity,
+            light_intensity):
+        self.__fuzzify_fs1(
+            soil_moisture,
+            air_temperature,
+        )
+        irrigation_time = self.fs1.Mamdani_inference(["irrigation_time"])["irrigation_time"]
+        print("1: {}".format(irrigation_time))
+        self.__fuzzify_fs2(
+            irrigation_time,
+            air_humidity,
+        )
+        irrigation_time = self.fs2.Mamdani_inference(["irrigation_time"])["irrigation_time"]
+        print("2: {}".format(irrigation_time))
+        self.__fuzzify_fs3(
+            irrigation_time,
+            light_intensity,
+        )
+        irrigation_time = self.fs3.Mamdani_inference(["irrigation_time"])["irrigation_time"]
+        print("3: {}".format(irrigation_time))
+        return irrigation_time
+
+    def __fuzzify_fs1(self,
+            soil_moisture,
+            air_temperature
+            ):
+        self.fs1.set_variable("soil_moisture", soil_moisture)
+        self.fs1.set_variable("air_temperature", air_temperature)
+
+    def __fuzzify_fs2(self,
+            irrigation_time_input,
+            air_humidity
+            ):
+        self.fs2.set_variable("irrigation_time_input", irrigation_time_input)
+        self.fs2.set_variable("air_humidity", air_humidity)
+
+    def __fuzzify_fs3(self,
+            irrigation_time_input,
+            light_intensity
+            ):
+        self.fs3.set_variable("irrigation_time_input", irrigation_time_input)
+        self.fs3.set_variable("light_intensity", light_intensity)
+
+    def __add_fs_variables(self, fs, data_sets):
+        for variable in data_sets:
             set_name = next(iter(variable.keys()))
             values_iter = iter(variable.values())
             sets = next(values_iter)
@@ -39,38 +95,10 @@ class FLC:
                     #LOG.error("Invalid key in flc config!")
                     return
                 fuzzy_sets.append(f)
-            self.fs.add_linguistic_variable(
+            fs.add_linguistic_variable(
                 set_name,
                 LinguisticVariable(
                     fuzzy_sets,
                     universe_of_discourse = uod
                 )
             )
-        self.fs.add_rules(RULES)
-
-    def solve(self,
-            soil_moisture,
-            air_temperature,
-            air_humidity,
-            light_intensity):
-        self.fuzzify(
-            soil_moisture,
-            air_temperature,
-            air_humidity,
-            light_intensity
-        )
-        
-        return self.inference()
-
-    def fuzzify(self,
-            soil_moisture,
-            air_temperature,
-            air_humidity,
-            light_intensity):
-        self.fs.set_variable("soil_moisture", soil_moisture)
-        self.fs.set_variable("air_temperature", air_temperature)
-        self.fs.set_variable("air_humidity", air_humidity)
-        self.fs.set_variable("light_intensity", light_intensity)
-
-    def inference(self):
-        return (self.fs.Mamdani_inference(["irrigation_time"]))
