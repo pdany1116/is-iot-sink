@@ -1,7 +1,7 @@
 import utils
 import queue
 import paho.mqtt.client as mqtt
-from logger import LOG
+from is_iot_sink.logger import LOG
 
 class MQTTClient:
     def __init__(self):

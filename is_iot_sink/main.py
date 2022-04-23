@@ -1,8 +1,8 @@
 import utils
 import weather
-import mqtt_client
-import valves_manager
-import mongodb_client
+from is_iot_sink.mqtt.mqtt_client import *
+from is_iot_sink.irrigation.valves.valves_manager import *
+from is_iot_sink.mongodb.mongodb_client import *
 from logger import LOG
 import utils
 import queue
@@ -13,10 +13,10 @@ import json
 import allowed_collectors
 
 __queue_head = queue.Queue(maxsize = 0)
-__sub = mqtt_client.MQTTClient()
+__sub = MQTTClient()
 __sub.attach_queue(__queue_head)
-__vm = valves_manager.ValveManager()
-__mongo_client = mongodb_client.MongoClient()
+__vm = ValveManager()
+__mongo_client = MongoClient()
 __ac = allowed_collectors.AllowedCollectors()
 
 def process_data(): 

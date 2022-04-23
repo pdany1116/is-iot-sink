@@ -1,7 +1,7 @@
 import json
 import RPi.GPIO as GPIO
 import utils
-from logger import LOG
+from is_iot_sink.logger import LOG
 
 class ValveManager:
     def __init__(self):

@@ -1,5 +1,5 @@
-import utils
-from logger import LOG
+from is_iot_sink import utils
+from is_iot_sink.logger import LOG
 import pymongo
 import os
 
