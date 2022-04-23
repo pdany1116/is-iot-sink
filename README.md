@@ -22,6 +22,11 @@ pip install -r requirements.txt
 nano setup.xml
 ```
 
+### Configure python path
+```
+export PYTHONPATH=$(pwd):${PYTHONPATH}
+```
+
 ### Run main
 ```
 python3 is-iot-collector/main.py
