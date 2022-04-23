@@ -1,6 +1,7 @@
 import json
 import RPi.GPIO as GPIO
-import utils
+from is_iot_sink import utils
+import time
 from is_iot_sink.logger import LOG
 
 class ValveManager:
@@ -11,35 +12,36 @@ class ValveManager:
         for gpio in self.__gpios:
             GPIO.setup(gpio, GPIO.OUT)
             GPIO.output(gpio, GPIO.HIGH)
+        LOG.info("Valve Manager initialized!")
             
-    def turn_on_valve_by_number(self, number: int):
+    def turn_on_by_number(self, number: int):
         if number >= self.__valve_count: 
             LOG.err("Invalid valve number [{}]!".format(number))
             return
         GPIO.output(self.__gpios[number], GPIO.LOW)
 
-    def turn_off_valve_by_number(self, number: int):
+    def turn_off_by_number(self, number: int):
         if number >= self.__valve_count: 
             LOG.err("Invalid valve number [{}]!".format(number))
             return
         GPIO.output(self.__gpios[number], GPIO.HIGH)
 
-    def turn_on_valve_by_gpio(self, gpio: int):        
+    def turn_on_by_gpio(self, gpio: int):        
         if gpio not in self.__gpios: 
             LOG.err("Gpio [{}] it's not connected to a valve!".format(gpio))
             return
         GPIO.output(gpio, GPIO.LOW)
 
-    def turn_off_valve_by_gpio(self, gpio: int):
+    def turn_off_by_gpio(self, gpio: int):
         if gpio not in self.__gpios: 
             LOG.err("Gpio [{}] it's not connected to a valve!".format(gpio))
             return
         GPIO.output(gpio, GPIO.HIGH)
 
-    def get_valves_count(self):
+    def get_count(self):
         return self.__valve_count
 
-    def get_valves_status(self):
+    def get_status(self):
         states = []
         for gpio in self.__gpios:
             state = {}
@@ -55,6 +57,19 @@ class ValveManager:
     def terminate(self):
         LOG.info("Valves Manager terminate!")
         GPIO.cleanup()
+
+    def turn_on_all_by_time(self, t):
+        LOG.info("Start valves cycle with {} seconds interval!".format(t))
+        self.turn_off_all()
+        for i in range(self.get_count()):
+            self.turn_on_by_number(i)
+            time.sleep(t)
+            self.turn_off_by_number(i)
+        LOG.info("Valves cycle finished!".format(t))
+
+    def turn_off_all(self):
+        for i in range(self.get_count()):
+            self.turn_off_by_number(i)
 
     def __parse_gpios(self):
         gpios_str = str(utils.get_setting('valves/gpios'))

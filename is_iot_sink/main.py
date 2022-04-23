@@ -51,9 +51,9 @@ def process_data():
                 valve = payload['valveId']
                 action = payload['action'].upper()
                 if (action == "TURN_ON"):
-                    __vm.turn_on_valve_by_number(valve)
+                    __vm.turn_on_by_number(valve)
                 elif (action == "TURN_OFF"):
-                    __vm.turn_off_valve_by_number(valve)
+                    __vm.turn_off_by_number(valve)
                 else:
                     LOG.err("Invalid valve action request! [{}]".format(action))
                     continue
@@ -65,7 +65,7 @@ def process_data():
             __mongo_client.insert_one(payload, utils.get_setting("mongo/collections/valves"))
 
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/valves/request"))):
-            __sub.publish(utils.get_setting("mqtt/topics/valves/response"), __vm.get_valves_status())
+            __sub.publish(utils.get_setting("mqtt/topics/valves/response"), __vm.get_status())
         
         else:
             LOG.err("Unwanted: <{}> [{}]".format(message.topic, message.payload))

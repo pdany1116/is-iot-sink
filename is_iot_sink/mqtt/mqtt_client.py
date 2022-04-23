@@ -1,4 +1,4 @@
-import utils
+from is_iot_sink import utils
 import queue
 import paho.mqtt.client as mqtt
 from is_iot_sink.logger import LOG
