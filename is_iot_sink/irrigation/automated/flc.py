@@ -1,19 +1,19 @@
 from simpful import *
 from flc_constants import *
-from pprint import *
-#from is_iot_sink.logger import LOG
+from is_iot_sink.logger import LOG
 
 class FLC:
     def __init__(self):
-        self.fs1 = FuzzySystem()
-        self.fs2 = FuzzySystem()
-        self.fs3 = FuzzySystem()
+        self.fs1 = FuzzySystem(show_banner = False)
+        self.fs2 = FuzzySystem(show_banner = False)
+        self.fs3 = FuzzySystem(show_banner = False)
         self.__add_fs_variables(self.fs1, FLC1_SETS)
         self.__add_fs_variables(self.fs2, FLC2_SETS)
         self.__add_fs_variables(self.fs3, FLC3_SETS)
         self.fs1.add_rules(FLC1_RULES)
         self.fs2.add_rules(FLC2_RULES)
         self.fs3.add_rules(FLC3_RULES)
+        LOG.info("Fuzzy logic controller initialized!")
 
     def solve(self,
             soil_moisture,
@@ -25,19 +25,19 @@ class FLC:
             air_temperature,
         )
         irrigation_time = self.fs1.Mamdani_inference(["irrigation_time"])["irrigation_time"]
-        print("1: {}".format(irrigation_time))
+
         self.__fuzzify_fs2(
             irrigation_time,
             air_humidity,
         )
         irrigation_time = self.fs2.Mamdani_inference(["irrigation_time"])["irrigation_time"]
-        print("2: {}".format(irrigation_time))
+
         self.__fuzzify_fs3(
             irrigation_time,
             light_intensity,
         )
         irrigation_time = self.fs3.Mamdani_inference(["irrigation_time"])["irrigation_time"]
-        print("3: {}".format(irrigation_time))
+
         return irrigation_time
 
     def __fuzzify_fs1(self,
@@ -92,7 +92,7 @@ class FLC:
                         term = name
                     )
                 else:
-                    #LOG.error("Invalid key in flc config!")
+                    LOG.error("Invalid key in flc config!")
                     return
                 fuzzy_sets.append(f)
             fs.add_linguistic_variable(
