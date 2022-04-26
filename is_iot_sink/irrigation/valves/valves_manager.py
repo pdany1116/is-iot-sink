@@ -82,3 +82,5 @@ class ValveManager:
 
     def __del__(self):
         self.terminate()
+
+valve_manager = ValveManager()

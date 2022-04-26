@@ -1,25 +1,26 @@
 import utils
 import weather
 from is_iot_sink.mqtt.mqtt_client import *
-from is_iot_sink.irrigation.valves.valves_manager import *
+from is_iot_sink.irrigation.valves.valves_manager import valve_manager
+import is_iot_sink.irrigation.mode as irrig_mode
 from is_iot_sink.mongodb.mongodb_client import *
+from is_iot_sink.allowed_collectors import *
 from logger import LOG
-import utils
 import queue
 import threading
 import signal
 import sys
 import json
-import allowed_collectors
 
 __queue_head = queue.Queue(maxsize = 0)
 __sub = MQTTClient()
 __sub.attach_queue(__queue_head)
-__vm = ValveManager()
 __mongo_client = MongoClient()
-__ac = allowed_collectors.AllowedCollectors()
+__ac = AllowedCollectors()
+__mode = irrig_mode.initial_mode()
 
 def process_data(): 
+    global __mode
     while True:
         message = __queue_head.get()
         __queue_head.task_done()
@@ -47,13 +48,17 @@ def process_data():
                 LOG.err("Unaccepted collector with id: {}".format(payload["collectorId"]))
 
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/valves/control"))):
+            if __mode == irrig_mode.Mode.AUTO:
+                LOG.info("Irrigation is in auto mode. Ignoring all valves control...")
+                continue
+            
             try:
                 valve = payload['valveId']
                 action = payload['action'].upper()
                 if (action == "TURN_ON"):
-                    __vm.turn_on_by_number(valve)
+                    valve_manager.turn_on_by_number(valve)
                 elif (action == "TURN_OFF"):
-                    __vm.turn_off_by_number(valve)
+                    valve_manager.turn_off_by_number(valve)
                 else:
                     LOG.err("Invalid valve action request! [{}]".format(action))
                     continue
@@ -65,8 +70,20 @@ def process_data():
             __mongo_client.insert_one(payload, utils.get_setting("mongo/collections/valves"))
 
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/valves/request"))):
-            __sub.publish(utils.get_setting("mqtt/topics/valves/response"), __vm.get_status())
+            __sub.publish(utils.get_setting("mqtt/topics/valves/response"), valve_manager.get_status())
         
+        elif (message.topic.startswith(utils.get_setting("mqtt/topics/irrigation/mode"))):
+            new_mode = irrig_mode.str_to_mode(payload["mode"].upper())
+            if (new_mode == None):
+                LOG.err("Invalid irrigation mode configuration!")
+                continue
+
+            if (new_mode == __mode):
+                LOG.info("Irrigation mode is already: [{}]".format(irrig_mode.mode_to_str(__mode)))
+            else:
+                __mode = new_mode
+                LOG.info("Irrigation mode switched to: [{}]".format(payload["mode"].upper()))
+
         else:
             LOG.err("Unwanted: <{}> [{}]".format(message.topic, message.payload))
 
@@ -84,7 +101,7 @@ def main():
     terminate()
 
 def terminate():
-    __vm.terminate()
+    valve_manager.terminate()
     sys.exit(0)
 
 if __name__ == "__main__":

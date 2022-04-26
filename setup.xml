@@ -18,6 +18,9 @@
                 <request>/valves/status/request/</request>
                 <response>/valves/status/response/</response>
             </valves>
+            <irrigation>
+                <mode>/irrigation/mode/</mode>
+            </irrigation>
         </topics>
     </mqtt>
     <valves>
@@ -36,4 +39,7 @@
         <!-- Time in seconds. 1h = 3600s -->
         <expireTime>3600</expireTime>
     </collectors>
+    <irrigation>
+        <initialMode>manual</initialMode>
+    </irrigation>
 </setup>

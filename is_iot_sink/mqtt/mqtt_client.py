@@ -11,6 +11,7 @@ class MQTTClient:
         self.__dataTopic = utils.get_setting("mqtt/topics/collector/data")
         self.__valvesTopic = utils.get_setting("mqtt/topics/valves/control")
         self.__valvesStatusRequestTopic = utils.get_setting("mqtt/topics/valves/request")
+        self.__irrigationModeTopic = utils.get_setting("mqtt/topics/irrigation/mode")
         self.__client = mqtt.Client(self.__name)
         self.__client.on_connect = self.__on_connect
         self.__client.on_disconnect = self.__on_disconnect
@@ -23,6 +24,7 @@ class MQTTClient:
             self.subscribe(self.__dataTopic)
             self.subscribe(self.__valvesTopic)
             self.subscribe(self.__valvesStatusRequestTopic)
+            self.subscribe(self.__irrigationModeTopic)
             self.__client.loop_start()
         except Exception as ex:
             LOG.err("MQTT Client failed to start! : {}".format(ex))
