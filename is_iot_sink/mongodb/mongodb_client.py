@@ -15,3 +15,5 @@ class MongoClient:
 
     def __del__(self):
         self.client.close()
+
+mongo_client = MongoClient()

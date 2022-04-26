@@ -17,3 +17,5 @@ class AllowedCollectors:
         for key in list(self.__collectors):
             if now > self.__collectors[key]:
                 self.__collectors.pop(key)
+
+ac = AllowedCollectors()

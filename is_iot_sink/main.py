@@ -1,31 +1,28 @@
-import utils
-import weather
-from is_iot_sink.mqtt.mqtt_client import *
+from is_iot_sink.mqtt.mqtt_client import mqtt_client
 from is_iot_sink.irrigation.valves.valves_manager import valve_manager
-import is_iot_sink.irrigation.mode as irrig_mode
-from is_iot_sink.mongodb.mongodb_client import *
-from is_iot_sink.allowed_collectors import *
+from is_iot_sink.mongodb.mongodb_client import mongo_client
+from is_iot_sink.allowed_collectors import ac
+from is_iot_sink.irrigation.irrigation_factory import *
 from logger import LOG
+import is_iot_sink.irrigation.mode as irr_mode
 import queue
 import threading
 import signal
 import sys
 import json
+import utils
 
-__queue_head = queue.Queue(maxsize = 0)
-__sub = MQTTClient()
-__sub.attach_queue(__queue_head)
-__mongo_client = MongoClient()
-__ac = AllowedCollectors()
-__mode = irrig_mode.initial_mode()
+queue_head = queue.Queue(maxsize = 0)
+mqtt_client.attach_queue(queue_head)
+irrigation = IrrigationFactory().create(irr_mode.initial_mode())
 
 def process_data(): 
-    global __mode
+    global irrigation
     while True:
-        message = __queue_head.get()
-        __queue_head.task_done()
-
-        __ac.check_all()
+        message = queue_head.get()
+        queue_head.task_done()
+        
+        ac.check_all()
 
         try:
             payload = json.loads(str(message.payload.decode("utf-8")))
@@ -36,19 +33,19 @@ def process_data():
         LOG.info("<{}> [{}]".format(message.topic, payload))
         
         if (message.topic == utils.get_setting("mqtt/topics/collector/registration")):
-            __ac.add(payload["collectorId"])
+            ac.add(payload["collectorId"])
             LOG.info("Collector [{}] accepted.".format(payload["collectorId"]))
 
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/collector/data"))):
-            if __ac.is_allowed(payload["collectorId"]):
+            if ac.is_allowed(payload["collectorId"]):
                 # TODO: check last readings before inserting data
                 # TODO: validate fields 
-                __mongo_client.insert_one(payload, utils.get_setting("mongo/collections/readings"))
+                mongo_client.insert_one(payload, utils.get_setting("mongo/collections/readings"))
             else:
                 LOG.err("Unaccepted collector with id: {}".format(payload["collectorId"]))
 
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/valves/control"))):
-            if __mode == irrig_mode.Mode.AUTO:
+            if irrigation.mode == irr_mode.Mode.AUTO:
                 LOG.info("Irrigation is in auto mode. Ignoring all valves control...")
                 continue
             
@@ -67,21 +64,21 @@ def process_data():
                 continue
             
             # TODO: check user integrity
-            __mongo_client.insert_one(payload, utils.get_setting("mongo/collections/valves"))
+            mongo_client.insert_one(payload, utils.get_setting("mongo/collections/valves"))
 
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/valves/request"))):
-            __sub.publish(utils.get_setting("mqtt/topics/valves/response"), valve_manager.get_status())
+            mqtt_client.publish(utils.get_setting("mqtt/topics/valves/response"), valve_manager.get_status())
         
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/irrigation/mode"))):
-            new_mode = irrig_mode.str_to_mode(payload["mode"].upper())
+            new_mode = irr_mode.str_to_mode(payload["mode"].upper())
             if (new_mode == None):
                 LOG.err("Invalid irrigation mode configuration!")
                 continue
 
-            if (new_mode == __mode):
-                LOG.info("Irrigation mode is already: [{}]".format(irrig_mode.mode_to_str(__mode)))
+            if (new_mode == irrigation.mode):
+                LOG.info("Irrigation mode is already: [{}]".format(irr_mode.mode_to_str(irrigation.mode)))
             else:
-                __mode = new_mode
+                irrigation = IrrigationFactory().create(new_mode)
                 LOG.info("Irrigation mode switched to: [{}]".format(payload["mode"].upper()))
 
         else:
@@ -92,8 +89,7 @@ def signal_handler(sig, frame):
     terminate()
 
 def main():
-    signal.signal(signal.SIGINT, signal_handler)
-    w = weather.Weather(utils.get_setting('location/latitude'), utils.get_setting('location/longitude'))
+    signal.signal(signal.SIGINT, signal_handler)    
     t = threading.Thread(target=process_data)
     t.setDaemon(True)
     t.start()
