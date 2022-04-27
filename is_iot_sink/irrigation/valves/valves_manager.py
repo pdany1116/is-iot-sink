@@ -81,7 +81,8 @@ class ValveManager:
 
     def stop_valves_cycle(self):
         self.__cycle_thread_running = False
-        self.__cycle_thread.join()
+        if hasattr(self, '__cycle_thread'):
+            self.__cycle_thread.join()
 
     def turn_off_all(self):
         for i in range(self.get_count()):
