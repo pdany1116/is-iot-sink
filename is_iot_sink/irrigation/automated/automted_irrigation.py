@@ -1,4 +1,3 @@
-from is_iot_sink.irrigation.irrigation import *
 from is_iot_sink.irrigation.mode import *
 from is_iot_sink.irrigation.automated.flc import flc
 from is_iot_sink.irrigation.valves.valves_manager import valve_manager
@@ -13,7 +12,7 @@ RAIN_FAIL_COUNTER_THRESHOLD = 4
 SOIL_ABSORTION_TIMEOUT = 60 * 60   # seconds
 RECHECK_TIMEOUT = 15 * 60          # seconds
 
-class AutomatedIrrigation(Irrigation):
+class AutomatedIrrigation:
     def __init__(self):
         super().__init__()
         self.mode = Mode.AUTO
