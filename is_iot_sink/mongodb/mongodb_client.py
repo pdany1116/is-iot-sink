@@ -15,7 +15,8 @@ class MongoClient:
         x = col.insert_one(doc)
 
     def read_last_readings(self):
-        col = self.db["readings"]
+        col = self.db[utils.get_setting("mongo/collections/readings")]
+        
         last_readings = []
         for id in ac.get_all():
             pipeline = [
@@ -25,7 +26,7 @@ class MongoClient:
                         'soilMoisture': {
                             '$exists': 1
                         },
-                        'airHummidity': {
+                        'airHumidity': {
                             '$exists': 1
                         },
                         'airTemperature': {
