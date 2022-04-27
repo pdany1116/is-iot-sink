@@ -13,7 +13,6 @@ import json
 import utils
 
 queue_head = queue.Queue(maxsize = 0)
-mqtt_client.attach_queue(queue_head)
 irrigation = IrrigationFactory().create(irr_mode.initial_mode())
 
 def process_data(): 
@@ -78,8 +77,10 @@ def process_data():
             if (new_mode == irrigation.mode):
                 LOG.info("Irrigation mode is already: [{}]".format(irr_mode.mode_to_str(irrigation.mode)))
             else:
-                irrigation = IrrigationFactory().create(new_mode)
                 LOG.info("Irrigation mode switched to: [{}]".format(payload["mode"].upper()))
+                irrigation.stop()
+                irrigation = IrrigationFactory().create(new_mode)
+                irrigation.start()
 
         else:
             LOG.err("Unwanted: <{}> [{}]".format(message.topic, message.payload))
@@ -89,11 +90,12 @@ def signal_handler(sig, frame):
     terminate()
 
 def main():
-    signal.signal(signal.SIGINT, signal_handler)    
-    t = threading.Thread(target=process_data)
-    t.setDaemon(True)
-    t.start()
-    t.join()
+    signal.signal(signal.SIGINT, signal_handler)
+    irrigation.start()
+    mqtt_client.attach_queue(queue_head)
+    process_data_thread = threading.Thread(target=process_data, daemon=True)
+    process_data_thread.start()
+    process_data_thread.join()
     terminate()
 
 def terminate():

@@ -4,5 +4,8 @@ class Irrigation:
     def __init__(self):
         self.mode = None
 
-    def run(self):
-        return None
+    def start(self):
+        pass
+
+    def stop(self):
+        pass

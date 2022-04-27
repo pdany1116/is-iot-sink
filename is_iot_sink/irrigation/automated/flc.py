@@ -1,5 +1,5 @@
 from simpful import *
-from flc_constants import *
+from is_iot_sink.irrigation.automated.flc_constants import *
 from is_iot_sink.logger import LOG
 
 ZERO_THRESHOLD = 2
@@ -107,3 +107,5 @@ class FLC:
                     universe_of_discourse = uod
                 )
             )
+
+flc = FLC()

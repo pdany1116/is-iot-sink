@@ -2,6 +2,7 @@ import json
 import RPi.GPIO as GPIO
 from is_iot_sink import utils
 import time
+import threading
 from is_iot_sink.logger import LOG
 
 class ValveManager:
@@ -58,14 +59,29 @@ class ValveManager:
         LOG.info("Valves Manager terminate!")
         GPIO.cleanup()
 
-    def turn_on_all_by_time(self, t):
-        LOG.info("Start valves cycle with {} seconds interval!".format(t))
+    def __valves_cycle(self, secs):        
+        LOG.info("Start valves cycle with {} minutes interval!".format(secs / 60.0))
         self.turn_off_all()
         for i in range(self.get_count()):
             self.turn_on_by_number(i)
-            time.sleep(t)
+            while secs != 0:
+                secs -= 1
+                time.sleep(1)
+                if not self.__cycle_thread_running:
+                    self.turn_off_by_number(i)
+                    LOG.info("Valves cycle interrupted!")
+                    return
             self.turn_off_by_number(i)
-        LOG.info("Valves cycle finished!".format(t))
+        LOG.info("Valves cycle finished!")
+
+    def start_valves_cycle(self, secs):
+        self.__cycle_thread = threading.Thread(target=self.__valves_cycle, daemon=True, args=[secs])
+        self.__cycle_thread_running = True
+        self.__cycle_thread.start()
+
+    def stop_valves_cycle(self):
+        self.__cycle_thread_running = False
+        self.__cycle_thread.join()
 
     def turn_off_all(self):
         for i in range(self.get_count()):
