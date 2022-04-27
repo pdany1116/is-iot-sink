@@ -2,6 +2,8 @@ from simpful import *
 from flc_constants import *
 from is_iot_sink.logger import LOG
 
+ZERO_THRESHOLD = 2
+
 class FLC:
     def __init__(self):
         self.fs1 = FuzzySystem(show_banner = False)
@@ -37,6 +39,9 @@ class FLC:
             light_intensity,
         )
         irrigation_time = self.fs3.Mamdani_inference(["irrigation_time"])["irrigation_time"]
+
+        if irrigation_time <= ZERO_THRESHOLD:
+            irrigation_time = 0
 
         return irrigation_time
 

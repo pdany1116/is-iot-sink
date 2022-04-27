@@ -1,5 +1,5 @@
 import time
-import utils
+from is_iot_sink import utils
 
 class AllowedCollectors:
     def __init__(self):
@@ -17,5 +17,8 @@ class AllowedCollectors:
         for key in list(self.__collectors):
             if now > self.__collectors[key]:
                 self.__collectors.pop(key)
+    
+    def get_all(self):
+        return self.__collectors
 
 ac = AllowedCollectors()
