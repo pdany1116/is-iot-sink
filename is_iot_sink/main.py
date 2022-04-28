@@ -11,6 +11,7 @@ import signal
 import sys
 import json
 import utils
+import time
 
 queue_head = queue.Queue(maxsize = 0)
 irrigation = IrrigationFactory().create(irr_mode.initial_mode())
@@ -62,6 +63,8 @@ def process_data():
                 LOG.err("Invalid format for valve control request!")
                 continue
             
+            payload['timestamp'] = time.time()
+
             # TODO: check user integrity
             mongo_client.insert_one(payload, utils.get_setting("mongo/collections/valves"))
 
