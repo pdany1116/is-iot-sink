@@ -21,8 +21,6 @@ def process_data():
     while True:
         message = queue_head.get()
         queue_head.task_done()
-        
-        ac.check_all()
 
         try:
             payload = json.loads(str(message.payload.decode("utf-8")))
@@ -63,7 +61,7 @@ def process_data():
             except Exception as e:
                 LOG.err("Invalid format for valve control request!")
                 continue
-            
+ 
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/valves/request"))):
             mqtt_client.publish(utils.get_setting("mqtt/topics/valves/response"), valve_manager.get_status())
         
