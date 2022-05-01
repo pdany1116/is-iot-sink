@@ -68,6 +68,7 @@ class MQTTClient:
             LOG.info("MQTT Client disconnected successfully!")
 
     def __on_message(self, client, userdata, message):
-        self.__queue_head.put(message)
+        if hasattr(self, '__queue_head'):
+            self.__queue_head.put(message)
 
 mqtt_client = MQTTClient()

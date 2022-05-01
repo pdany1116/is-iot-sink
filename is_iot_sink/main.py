@@ -1,8 +1,8 @@
-from is_iot_sink.mqtt.mqtt_client import mqtt_client
 from is_iot_sink.irrigation.valves.valves_manager import valve_manager
 from is_iot_sink.mongodb.mongodb_client import mongo_client
 from is_iot_sink.allowed_collectors import ac
 from is_iot_sink.irrigation.irrigation_factory import *
+from is_iot_sink.mqtt.mqtt_client import mqtt_client
 from logger import LOG
 import is_iot_sink.irrigation.mode as irr_mode
 import queue
