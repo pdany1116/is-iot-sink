@@ -123,7 +123,7 @@ class AutomatedIrrigation:
         data['irrigationTime'] = irrigation_time
         data['rainProbability'] = rain_probability
         data['completed'] = False
-        data['startedAt'] = time.time()
+        data['timestamp'] = time.time()
 
         return mongo_client.insert_one(data, "irrigations")
 
