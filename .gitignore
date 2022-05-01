@@ -133,3 +133,6 @@ logs
 
 # nohup
 nohup.out
+
+# vscode
+.vscode
