@@ -33,6 +33,7 @@
             <readings>readings</readings>
             <valves>valves</valves>
             <users>users</users>
+            <irrigations>irrigations</irrigations>
         </collections>
     </mongo>
     <collectors>
