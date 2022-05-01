@@ -52,22 +52,18 @@ def process_data():
             try:
                 valve = payload['valveId']
                 action = payload['action'].upper()
+                userId = payload['userId']
                 if (action == "TURN_ON"):
-                    valve_manager.turn_on_by_number(valve)
+                    valve_manager.turn_on_by_number(valve, userId)
                 elif (action == "TURN_OFF"):
-                    valve_manager.turn_off_by_number(valve)
+                    valve_manager.turn_off_by_number(valve, userId)
                 else:
                     LOG.err("Invalid valve action request! [{}]".format(action))
                     continue
-            except:
+            except Exception as e:
                 LOG.err("Invalid format for valve control request!")
                 continue
             
-            payload['timestamp'] = time.time()
-
-            # TODO: check user integrity
-            mongo_client.insert_one(payload, utils.get_setting("mongo/collections/valves"))
-
         elif (message.topic.startswith(utils.get_setting("mqtt/topics/valves/request"))):
             mqtt_client.publish(utils.get_setting("mqtt/topics/valves/response"), valve_manager.get_status())
         

@@ -4,6 +4,7 @@ from is_iot_sink import utils
 import time
 import threading
 from is_iot_sink.logger import LOG
+from is_iot_sink.mongodb.mongodb_client import mongo_client
 
 class ValveManager:
     def __init__(self):
@@ -15,29 +16,35 @@ class ValveManager:
             GPIO.output(gpio, GPIO.HIGH)
         LOG.info("Valve Manager initialized!")
             
-    def turn_on_by_number(self, number: int):
+    def turn_on_by_number(self, number: int, userId = None):
         if number >= self.__valve_count: 
             LOG.err("Invalid valve number [{}]!".format(number))
             return
         GPIO.output(self.__gpios[number], GPIO.LOW)
 
-    def turn_off_by_number(self, number: int):
+        if userId != None:
+            payload = {}
+            payload['valveId'] = number
+            payload['action'] = "TURN_ON"
+            payload['userId'] = userId
+            payload['timestamp'] = time.time()
+
+            mongo_client.insert_one(payload, utils.get_setting("mongo/collections/valves"))
+
+    def turn_off_by_number(self, number: int, userId = None):
         if number >= self.__valve_count: 
             LOG.err("Invalid valve number [{}]!".format(number))
             return
         GPIO.output(self.__gpios[number], GPIO.HIGH)
 
-    def turn_on_by_gpio(self, gpio: int):        
-        if gpio not in self.__gpios: 
-            LOG.err("Gpio [{}] it's not connected to a valve!".format(gpio))
-            return
-        GPIO.output(gpio, GPIO.LOW)
+        if userId != None:
+            payload = {}
+            payload['valveId'] = number
+            payload['action'] = "TURN_OFF"
+            payload['userId'] = userId
+            payload['timestamp'] = time.time()
 
-    def turn_off_by_gpio(self, gpio: int):
-        if gpio not in self.__gpios: 
-            LOG.err("Gpio [{}] it's not connected to a valve!".format(gpio))
-            return
-        GPIO.output(gpio, GPIO.HIGH)
+            mongo_client.insert_one(payload, utils.get_setting("mongo/collections/valves"))
 
     def get_count(self):
         return self.__valve_count
@@ -61,17 +68,18 @@ class ValveManager:
 
     def __valves_cycle(self, secs):        
         LOG.info("Start valves cycle with {} minutes interval!".format(secs / 60.0))
+        adminId = mongo_client.admin_user_id()
         self.turn_off_all()
         for i in range(self.get_count()):
-            self.turn_on_by_number(i)
+            self.turn_on_by_number(i, adminId)
             while secs != 0:
                 secs -= 1
                 time.sleep(1)
                 if not self.__cycle_thread_running:
-                    self.turn_off_by_number(i)
+                    self.turn_off_by_number(i, adminId)
                     LOG.info("Valves cycle interrupted!")
                     return
-            self.turn_off_by_number(i)
+            self.turn_off_by_number(i, adminId)
         LOG.info("Valves cycle finished!")
 
     def start_valves_cycle(self, secs):
@@ -83,10 +91,11 @@ class ValveManager:
         self.__cycle_thread_running = False
         if hasattr(self, '__cycle_thread'):
             self.__cycle_thread.join()
+            self.turn_off_all(mongo_client.admin_user_id())
 
-    def turn_off_all(self):
+    def turn_off_all(self, userId = None):
         for i in range(self.get_count()):
-            self.turn_off_by_number(i)
+            self.turn_off_by_number(i, userId)
 
     def __parse_gpios(self):
         gpios_str = str(utils.get_setting('valves/gpios'))

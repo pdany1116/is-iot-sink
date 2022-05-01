@@ -69,7 +69,6 @@ class AutomatedIrrigation:
                 if not self.__sleep(RECHECK_TIMEOUT):
                     break
         valve_manager.stop_valves_cycle()
-        valve_manager.turn_off_all()
 
     def __sleep(self, secs):
         while secs != 0:

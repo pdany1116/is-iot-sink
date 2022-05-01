@@ -14,6 +14,11 @@ class MongoClient:
         col = self.db[collection]
         x = col.insert_one(doc)
 
+    def admin_user_id(self):
+        col = self.db[utils.get_setting("mongo/collections/users")]
+        user = col.find_one({'UserName': 'admin'})
+        return user['_id']
+
     def read_last_readings(self):
         col = self.db[utils.get_setting("mongo/collections/readings")]
         
