@@ -54,14 +54,19 @@ class AutomatedIrrigation:
                 if (rain_probability < RAIN_PROB_THRESHOLD or
                     self.rain_fail_counter >= RAIN_FAIL_COUNTER_THRESHOLD):
                     self.rain_fail_counter = 0
-                    valve_manager.start_valves_cycle(irrigation_time * 60)
+                    inserted_id = self.__insert_irrigation(irrigation_time, rain_probability)
+                    irrigation_time = irrigation_time * 60
+                    valve_manager.start_valves_cycle(irrigation_time)
+                    if not self.__sleep(irrigation_time * valve_manager.get_count()):
+                        break
+                    self.__update_irrigation(inserted_id)
                 else:
                     self.rain_fail_counter += 1
                     LOG.info("Irrigation not started. Waiting for rain. Fail counter = {}.".format(self.rain_fail_counter))
                     if not self.__sleep(RECHECK_TIMEOUT):
                         break
-                    continue
-                
+                    continue                
+
                 if not self.__sleep(SOIL_ABSORTION_TIMEOUT):
                     break
             except Exception as e:
@@ -71,7 +76,7 @@ class AutomatedIrrigation:
         valve_manager.stop_valves_cycle()
 
     def __sleep(self, secs):
-        while secs != 0:
+        while secs >= 0:
             secs -= 1
             time.sleep(1)
             if not self.running:
@@ -112,3 +117,15 @@ class AutomatedIrrigation:
 
     def __rain_probability(self):
         return self.weather.get_1hour_data()[0]["RainProbability"]
+
+    def __insert_irrigation(self, irrigation_time, rain_probability):
+        data = {}
+        data['irrigation_time'] = irrigation_time
+        data['rain_probability'] = rain_probability
+        data['completed'] = False
+        data['started_at'] = time.time()
+
+        return mongo_client.insert_one(data, "irrigations")
+
+    def __update_irrigation(self, inserted_id):
+        mongo_client.update_finished_irrigation(inserted_id)

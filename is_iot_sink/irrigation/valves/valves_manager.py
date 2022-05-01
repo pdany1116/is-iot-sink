@@ -67,13 +67,14 @@ class ValveManager:
         GPIO.cleanup()
 
     def __valves_cycle(self, secs):        
-        LOG.info("Start valves cycle with {} minutes interval!".format(secs / 60.0))
+        LOG.info("Start valves cycle with {} minutes interval!".format(secs / 60))
         adminId = mongo_client.admin_user_id()
         self.turn_off_all()
         for i in range(self.get_count()):
             self.turn_on_by_number(i, adminId)
-            while secs != 0:
-                secs -= 1
+            timeout = secs
+            while timeout >= 0:
+                timeout -= 1
                 time.sleep(1)
                 if not self.__cycle_thread_running:
                     self.turn_off_by_number(i, adminId)
@@ -81,6 +82,7 @@ class ValveManager:
                     return
             self.turn_off_by_number(i, adminId)
         LOG.info("Valves cycle finished!")
+        self.__cycle_thread_running = False
 
     def start_valves_cycle(self, secs):
         self.__cycle_thread = threading.Thread(target=self.__valves_cycle, daemon=True, args=[secs])

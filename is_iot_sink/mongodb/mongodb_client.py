@@ -1,8 +1,10 @@
+from bson import ObjectId
 from is_iot_sink import utils
 from is_iot_sink.logger import LOG
 from is_iot_sink.allowed_collectors import ac
 import pymongo
 import os
+import time
 
 class MongoClient:
     def __init__(self):
@@ -12,7 +14,12 @@ class MongoClient:
 
     def insert_one(self, doc, collection: str):
         col = self.db[collection]
-        x = col.insert_one(doc)
+        result = col.insert_one(doc)
+        return result.inserted_id
+
+    def update_finished_irrigation(self, id):
+        col = self.db[utils.get_setting("mongo/collections/irrigations")]
+        result = col.update_one({'_id': ObjectId(id)}, {'$set': {'completed': True}})
 
     def admin_user_id(self):
         col = self.db[utils.get_setting("mongo/collections/users")]
