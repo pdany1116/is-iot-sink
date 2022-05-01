@@ -3,8 +3,8 @@
     <name>Sink</name>
     <location>
         <!-- Sibiu, Romania-->
-        <latitude>41.8</latitude>
-        <longitude>24.15</longitude>
+        <latitude>41.861248</latitude>
+        <longitude>23.722364</longitude>
     </location>
     <mqtt>
         <host>broker.emqx.io</host>

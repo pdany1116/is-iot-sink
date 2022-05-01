@@ -6,7 +6,7 @@ class Weather:
         self.api_key = os.getenv('ACCU_API_KEY')
         self.latitude = latitude
         self.longitude = longitude
-        self.location_id = '240499'
+        self.location_id = '1161143'
         # Hardcoded location_id for now to avoid requesting everytime a Weather object is created
         #self.__create_location_id()
 
