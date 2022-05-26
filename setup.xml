@@ -7,7 +7,9 @@
         <longitude>23.722364</longitude>
     </location>
     <mqtt>
-        <host>broker.emqx.io</host>
+        <port>1883</port>
+        <qos>2</qos>
+        <auth>on</auth>
         <topics>
             <collector>
                 <registration>/collector/registration/</registration>
