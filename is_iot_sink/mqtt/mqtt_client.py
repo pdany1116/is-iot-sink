@@ -37,7 +37,7 @@ class MQTTClient:
 
     def connect(self):
         if not self.__client.is_connected():
-            self.__client.connect(self.__host)
+            self.__client.connect(self.__host, self.__port)
 
     def disconnect(self):
         self.__client.disconnect()
