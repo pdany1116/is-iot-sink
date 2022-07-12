@@ -35,13 +35,13 @@ FLC1_SETS = [
     },
     {
         "air_temperature": [{
-            "cold": [-10, -10, 10, 12]
+            "cold": [-30, -30, 10, 13]
         }, {
-            "moderate": [10, 15, 20]
+            "moderate": [10, 16.5, 23]
         }, {
-            "hot": [18, 20, 40, 40]
+            "hot": [20, 23, 50, 50]
         }],
-        "uod": [-10, 40]
+        "uod": [-30, 50]
     }, 
     IRRIGATION_TIME_SET
 ]
