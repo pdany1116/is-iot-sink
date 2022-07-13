@@ -50,11 +50,11 @@ class AutomatedIrrigation:
                     continue
 
                 rain_probability = self.__rain_probability()
+                inserted_id = self.__insert_irrigation(irrigation_time, rain_probability)
                 LOG.info("Rain probability {}%".format(rain_probability))
                 if (rain_probability < RAIN_PROB_THRESHOLD or
                     self.rain_fail_counter >= RAIN_FAIL_COUNTER_THRESHOLD):
                     self.rain_fail_counter = 0
-                    inserted_id = self.__insert_irrigation(irrigation_time, rain_probability)
                     irrigation_time = irrigation_time * 60
                     valve_manager.start_valves_cycle(irrigation_time)
                     if not self.__sleep(irrigation_time * valve_manager.get_count()):
@@ -65,7 +65,7 @@ class AutomatedIrrigation:
                     LOG.info("Irrigation not started. Waiting for rain. Fail counter = {}.".format(self.rain_fail_counter))
                     if not self.__sleep(RECHECK_TIMEOUT):
                         break
-                    continue                
+                    continue
 
                 if not self.__sleep(SOIL_ABSORTION_TIMEOUT):
                     break
@@ -96,7 +96,7 @@ class AutomatedIrrigation:
             sum = 0
             for moisture in reading['soilMoisture']:
                 sum += float(moisture)
-            avg = sum / len(reading['soilMoisture'])  
+            avg = sum / len(reading['soilMoisture'])
             average['soilMoisture'] += avg
 
             # Air Temperature
@@ -106,12 +106,12 @@ class AutomatedIrrigation:
             average['airHumidity'] += float(reading['airHumidity'])
 
             # Light Intensity
-            #data['lightIntensity'] += float(reading['lightIntensity'])
+            average['lightIntensity'] += float(reading['lightIntensity'])
 
         average['soilMoisture'] /= len(readings)
         average['airTemperature'] /= len(readings)
         average['airHumidity'] /= len(readings)
-        #data['lightIntensity'] /= len(readings)
+        average['lightIntensity'] /= len(readings)
 
         return average
 

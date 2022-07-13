@@ -44,5 +44,8 @@
     </collectors>
     <irrigation>
         <initialMode>manual</initialMode>
+        <automated>
+            <last_readings_count>5</last_readings_count>
+        </automated>
     </irrigation>
 </setup>

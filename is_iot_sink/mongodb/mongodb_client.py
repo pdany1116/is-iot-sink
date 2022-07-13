@@ -28,7 +28,7 @@ class MongoClient:
 
     def read_last_readings(self):
         col = self.db[utils.get_setting("mongo/collections/readings")]
-        
+
         last_readings = []
         for id in ac.get_all():
             pipeline = [
@@ -44,17 +44,17 @@ class MongoClient:
                         'airTemperature': {
                             '$exists': 1
                         }
-                        #,
-                        #'lightIntensity': {
-                        #    '$exists': 1
-                        #}
+                        ,
+                        'lightIntensity': {
+                            '$exists': 1
+                        }
                     }
                 }, {
                     '$sort': {
                         'timestamp': -1
                     }
                 }, {
-                    '$limit': 1
+                    '$limit': int(utils.get_setting("irrigation/automated/last_readings_count"))
                 }
             ]
             readings = col.aggregate(pipeline)
