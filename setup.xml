@@ -41,6 +41,7 @@
     <collectors>
         <!-- Time in seconds. 1h = 3600s -->
         <expireTime>3600</expireTime>
+        <registrationEnabled>false</registrationEnabled>
     </collectors>
     <irrigation>
         <initialMode>manual</initialMode>

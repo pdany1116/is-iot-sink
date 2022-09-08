@@ -31,6 +31,9 @@ def process_data():
         LOG.info("<{}> [{}]".format(message.topic, payload))
         
         if (message.topic == utils.get_setting("mqtt/topics/collector/registration")):
+            if ac.is_registration_disabled():
+                continue
+
             ac.add(payload["collectorId"])
             LOG.info("Collector [{}] accepted.".format(payload["collectorId"]))
 
