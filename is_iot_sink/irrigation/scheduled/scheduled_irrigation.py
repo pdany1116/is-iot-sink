@@ -1,3 +1,5 @@
+import datetime
+
 from is_iot_sink.allowed_collectors import AllowedCollectors
 from is_iot_sink.irrigation.irrigation_mode import *
 from is_iot_sink.irrigation.automated.flc import flc
@@ -18,24 +20,35 @@ class ScheduledIrrigation:
         self.__allowed_collectors = allowed_collectors
         self.mode = IrrigationMode.SCHEDULED
         self.running = False
-        self.thread = threading.Thread(target=self.__run, daemon=True)
+        self.global_thread = threading.Thread(target=self.__run, daemon=True)
 
     def start(self):
         LOG.info("Scheduled Irrigation process started.")
         self.running = True
-        self.thread.start()
+        self.global_thread.start()
 
     def stop(self):
         LOG.info("Scheduled Irrigation process stopped.")
         self.running = False
-        self.thread.join()
+        self.global_thread.join()
 
     def __run(self):
 
+        #to do
         while self.running:
-            self.__mongo_client.read_first_appointment()
+            appointment = self.__mongo_client.read_first_appointment()
+
+            if appointment is not None:
+                delay = self.__get_delay(appointment['timestamp'])
+                duration = appointment['duration']
+                self.__valve_manager.start_valves_cycle(duration, delay)
+
+
 
         return
+
+    def __get_delay(self, timestamp):
+        return timestamp - datetime.datetime.now().timestamp()
 
     def __sleep(self, secs):
         while secs >= 0:

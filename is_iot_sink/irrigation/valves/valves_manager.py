@@ -86,10 +86,13 @@ class ValveManager:
         LOG.info("Valves cycle finished!")
         self.__cycle_thread_running = False
 
-    def start_valves_cycle(self, secs):
-        self.__cycle_thread = threading.Thread(target=self.__valves_cycle, daemon=True, args=[secs])
-        self.__cycle_thread_running = True
-        self.__cycle_thread.start()
+    def start_valves_cycle(self, secs, delay = None):
+        if delay is None:
+            self.__cycle_thread = threading.Thread(target=self.__valves_cycle, daemon=True, args=[secs])
+            self.__cycle_thread_running = True
+            self.__cycle_thread.start()
+        else:
+            self.__cycle_thread = threading.Timer(delay, self.__valves_cycle, [secs])
 
     def stop_valves_cycle(self):
         self.__cycle_thread_running = False
