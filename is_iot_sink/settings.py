@@ -1,9 +1,12 @@
 from threading import Lock
 import yaml
 import dpath.util
+import os
+
+DEFAULT_PATH = os.getenv('PROJECT_PATH') + '/setup.yml'
 
 class Settings:
-    def __init__(self, filepath, mutex: Lock):
+    def __init__(self, filepath = DEFAULT_PATH, mutex = Lock()):
         file = open(filepath)
         self.__settings = yaml.safe_load(file)
         self.__mutex = mutex

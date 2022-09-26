@@ -13,13 +13,8 @@ import json
 import os
 
 class Sink:
-    def __init__(self, settings=None):
-        if settings == None:
-            self.__settings_mutex = Lock()
-            self.__settings = Settings(os.getenv('PROJECT_PATH') + '/setup.yml', self.__settings_mutex)
-        else:
-            self.__settings = settings
-
+    def __init__(self, settings = Settings()):
+        self.__settings = settings
         self.__queue_head = Queue(maxsize = 0)
         self.__running = False
         self.__mongo_client = MongoClient(self.__settings)

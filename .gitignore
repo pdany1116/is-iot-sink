@@ -140,3 +140,6 @@ nohup.out
 # env files
 .env
 .env.test
+
+#pycharm
+.idea
