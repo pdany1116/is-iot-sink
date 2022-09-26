@@ -1,0 +1,4 @@
+name: SinkTest
+location:
+  latitude: 42
+array: [1,2,3]

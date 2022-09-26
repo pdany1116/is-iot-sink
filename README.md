@@ -58,7 +58,41 @@ nano setup.xml
 export PYTHONPATH=$(pwd):${PYTHONPATH}
 ```
 
+### Configure project path
+```
+export PROJECT_PATH=$(pwd)
+```
+
 ### Run main
 ```
 python3 is_iot_sink/main.py
+```
+
+
+### Testing
+1. Install `mosquitto` MQTT Broker. More information [here](https://mosquitto.org/download/).
+```
+sudo apt-add-repository ppa:mosquitto-dev/mosquitto-ppa
+sudo apt-get update
+```
+2. MongoDB is not supported on ARM architecture for Debian, so no local configuration was setup on Raspberry Pi.
+3. Create test environment variables file and replace necessary variables.
+```
+cp .env.example .env
+```
+4. Configure python path.
+```
+export PYTHONPATH=$(pwd):${PYTHONPATH}
+```
+5. Configure project path.
+```
+export PROJECT_PATH=$(pwd)
+```
+6. Check code syntax.
+```
+python3 -m py_compile $(find * -type f | egrep -v '^env/|/env/|env' | egrep '.*\.py$' | xargs)
+```
+7. Run tests.
+```
+pytest
 ```

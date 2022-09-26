@@ -136,3 +136,7 @@ nohup.out
 
 # vscode
 .vscode
+
+# env files
+.env
+.env.test

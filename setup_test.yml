@@ -1,0 +1,35 @@
+name: SinkTest
+location:
+  latitude: 41.861248
+  longitude: 23.722364
+mqtt:
+  port: 1883
+  qos: 2
+  auth: 'off'
+  topics:
+    collector:
+      registration: /collector/registration/
+      data: /collector/data/
+    valves:
+      control: /valves/control/
+      request: /valves/status/request/
+      response: /valves/status/response/
+    irrigation:
+      mode: /irrigation/mode/
+valves:
+  count: 6
+  gpios: [14,15,18,23,24,25]
+mongo:
+  db: Thuia
+  collections:
+    readings: readings_test
+    valves: valves_test
+    users: users_test
+    irrigations: irrigations_test
+collectors:
+  expireTime: 3600
+  registrationEnabled: 'true'
+irrigation:
+  initialMode: manual
+  automated:
+    last_readings_count: 5

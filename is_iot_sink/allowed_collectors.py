@@ -1,14 +1,18 @@
 import time
-from is_iot_sink import utils
 from is_iot_sink.logger import LOG
 import threading
 import time
+from is_iot_sink.settings import Settings
 
 class AllowedCollectors:
-    def __init__(self):
+    def __init__(self, settings: Settings):
+        self.__settings = settings
         self.__collectors = {}
-        self.__expire_time = int(utils.get_setting("collectors/expireTime"))
-        self.__registration_enabled = True if utils.get_setting("collectors/registrationEnabled").lower() == "true" else False
+        try:
+            self.__expire_time = self.__settings.get("collectors/expireTime")
+        except IndexError:
+            self.__expire_time = 3600
+        self.__registration_enabled = True if self.__settings.get("collectors/registrationEnabled").lower() == "true" else False
         self.__check_thread = threading.Thread(target=self.__check_all, daemon=True)
         self.__check_thread.start()
 
@@ -39,5 +43,3 @@ class AllowedCollectors:
         
     def get_all(self):
         return self.__collectors
-
-ac = AllowedCollectors()

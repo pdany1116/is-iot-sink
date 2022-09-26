@@ -1,21 +1,22 @@
-from is_iot_sink import utils
 import queue
 import os
 import paho.mqtt.client as mqtt
 from is_iot_sink.logger import LOG
+from is_iot_sink.settings import Settings
 
 class MQTTClient:
-    def __init__(self):
-        self.__name = utils.get_setting("name")
+    def __init__(self, settings: Settings):
+        self.__settings = settings
+        self.__name = self.__settings.get("name")
         self.__host = os.getenv('MQTT_HOST')
-        self.__port = int(utils.get_setting("mqtt/port"))
-        self.__qos = int(utils.get_setting("mqtt/qos"))
-        self.__auth = utils.get_setting("mqtt/auth")
-        self.__registrationTopic = utils.get_setting("mqtt/topics/collector/registration")
-        self.__dataTopic = utils.get_setting("mqtt/topics/collector/data")
-        self.__valvesTopic = utils.get_setting("mqtt/topics/valves/control")
-        self.__valvesStatusRequestTopic = utils.get_setting("mqtt/topics/valves/request")
-        self.__irrigationModeTopic = utils.get_setting("mqtt/topics/irrigation/mode")
+        self.__port = int(self.__settings.get("mqtt/port"))
+        self.__qos = int(self.__settings.get("mqtt/qos"))
+        self.__auth = self.__settings.get("mqtt/auth")
+        self.__registrationTopic = self.__settings.get("mqtt/topics/collector/registration")
+        self.__dataTopic = self.__settings.get("mqtt/topics/collector/data")
+        self.__valvesTopic = self.__settings.get("mqtt/topics/valves/control")
+        self.__valvesStatusRequestTopic = self.__settings.get("mqtt/topics/valves/request")
+        self.__irrigationModeTopic = self.__settings.get("mqtt/topics/irrigation/mode")
         self.__client = mqtt.Client(self.__name)
         self.__client.on_connect = self.__on_connect
         self.__client.on_disconnect = self.__on_disconnect
@@ -75,5 +76,3 @@ class MQTTClient:
 
     def __on_message(self, client, userdata, message):
         self.__queue_head.put(message)
-
-mqtt_client = MQTTClient()

@@ -1,8 +1,10 @@
-from is_iot_sink.irrigation.mode import *
+from is_iot_sink.allowed_collectors import AllowedCollectors
+from is_iot_sink.irrigation.irrigation_mode import *
 from is_iot_sink.irrigation.automated.flc import flc
-from is_iot_sink.irrigation.valves.valves_manager import valve_manager
+from is_iot_sink.irrigation.valves.valves_manager import ValveManager
 from is_iot_sink.irrigation.weather import *
-from is_iot_sink.mongodb.mongodb_client import mongo_client
+from is_iot_sink.mongodb.mongodb_client import MongoClient
+from is_iot_sink.settings import Settings
 from is_iot_sink.logger import LOG
 import time
 import threading
@@ -13,10 +15,14 @@ SOIL_ABSORTION_TIMEOUT = 60 * 60   # seconds
 RECHECK_TIMEOUT = 15 * 60          # seconds
 
 class AutomatedIrrigation:
-    def __init__(self):
+    def __init__(self, settings: Settings, valve_manager: ValveManager, mongo_client: MongoClient, allowed_collectors: AllowedCollectors):
         super().__init__()
-        self.mode = Mode.AUTO
-        self.weather = Weather(utils.get_setting("location/latitude"), utils.get_setting("location/longitude"))
+        self.__settings = settings
+        self.__valve_manager = valve_manager
+        self.__mongo_client = mongo_client
+        self.__allowed_collectors = allowed_collectors
+        self.mode = IrrigationMode.AUTO
+        self.weather = Weather(self.__settings.get("location/latitude"), self.__settings.get("location/longitude"))
         self.rain_fail_counter = 0
         self.running = False
         self.thread = threading.Thread(target=self.__run, daemon=True)
@@ -34,7 +40,7 @@ class AutomatedIrrigation:
     def __run(self):
         while self.running:
             try:
-                readings = mongo_client.read_last_readings()
+                readings = self.__mongo_client.read_last_readings(self.__allowed_collectors.get_all())
                 average = self.__calculate_average(readings)
                 irrigation_time = flc.solve(
                     average['soilMoisture'],
@@ -56,8 +62,8 @@ class AutomatedIrrigation:
                     self.rain_fail_counter >= RAIN_FAIL_COUNTER_THRESHOLD):
                     self.rain_fail_counter = 0
                     irrigation_time = irrigation_time * 60
-                    valve_manager.start_valves_cycle(irrigation_time)
-                    if not self.__sleep(irrigation_time * valve_manager.get_count()):
+                    self.__valve_manager.start_valves_cycle(irrigation_time)
+                    if not self.__sleep(irrigation_time * self.__valve_manager.get_count()):
                         break
                     self.__update_irrigation(inserted_id)
                 else:
@@ -73,7 +79,7 @@ class AutomatedIrrigation:
                 LOG.err(e)
                 if not self.__sleep(RECHECK_TIMEOUT):
                     break
-        valve_manager.stop_valves_cycle()
+        self.__valve_manager.stop_valves_cycle()
 
     def __sleep(self, secs):
         while secs >= 0:
@@ -125,7 +131,7 @@ class AutomatedIrrigation:
         data['completed'] = False
         data['timestamp'] = time.time()
 
-        return mongo_client.insert_one(data, "irrigations")
+        return self.__mongo_client.insert_one(data, "irrigations")
 
     def __update_irrigation(self, inserted_id):
-        mongo_client.update_finished_irrigation(inserted_id)
+        self.__mongo_client.update_finished_irrigation(inserted_id)
