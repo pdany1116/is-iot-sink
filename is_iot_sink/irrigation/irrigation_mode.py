@@ -3,6 +3,7 @@ from enum import Enum
 class IrrigationMode(Enum):
     MANUAL = 0
     AUTO = 1
+    SCHEDULED = 2
 
     @classmethod
     def mode_to_str(self, mode):
@@ -10,6 +11,8 @@ class IrrigationMode(Enum):
             return "MANUAL"
         elif mode == self.AUTO:
             return "AUTO"
+        elif mode == self.SCHEDULED:
+            return "SCHEDULED"
         else:
             return None
 
@@ -21,5 +24,7 @@ class IrrigationMode(Enum):
             return self.MANUAL
         elif str == "AUTO":
             return self.AUTO
+        elif str == "SCHEDULED":
+            return self.SCHEDULED
         else:
             return None

@@ -6,6 +6,7 @@ from is_iot_sink.irrigation.irrigation_mode import IrrigationMode
 from is_iot_sink.irrigation.valves.valves_manager import ValveManager
 from is_iot_sink.mongodb.mongodb_client import MongoClient
 from is_iot_sink.settings import Settings
+from is_iot_sink.irrigation.scheduled import ScheduledIrrigation
 
 class IrrigationFactory:
     def __init__(self, settings: Settings, valve_manager: ValveManager, mongo_client: MongoClient, allowed_collectors: AllowedCollectors):
@@ -19,5 +20,7 @@ class IrrigationFactory:
             return ManualIrrigation()
         elif (mode == IrrigationMode.AUTO):
             return AutomatedIrrigation(self.__settings, self.__valve_manager, self.__mongo_client, self.__allowed_collectors)
+        elif (mode == IrrigationMode.SCHEDULED):
+            return ScheduledIrrigation(self.__settings, self.__valve_manager, self.__mongo_client, self.__allowed_collectors)
         else:
             return None
